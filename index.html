@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0F6E56">
+<title>Kreatibe · 33 Aulas</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --green:#0F6E56;--green-light:#E1F5EE;--green-dark:#085041;
+    --amber:#BA7517;--amber-light:#FAEEDA;
+    --red:#A32D2D;--red-light:#FCEBEB;
+    --bg:#F5F5F3;--surface:#FFFFFF;--border:#E0DDD5;
+    --text:#1C1B18;--muted:#6B6860;--hint:#A8A59E;
+    --radius:10px;--radius-sm:7px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+  
+  /* HEADER */
+  .header{background:var(--green);color:#fff;padding:16px 16px 12px;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,0.15)}
+  .header h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
+  .header-sub{font-size:12px;opacity:0.75;margin-top:2px}
+  .header-stats{display:flex;gap:12px;margin-top:10px}
+  .hstat{background:rgba(255,255,255,0.15);border-radius:var(--radius-sm);padding:6px 10px;flex:1;text-align:center}
+  .hstat-num{font-size:20px;font-weight:700}
+  .hstat-lbl{font-size:10px;opacity:0.8;margin-top:1px}
+  .progress-wrap{margin-top:10px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px}
+  .progress-bar{height:4px;background:#fff;border-radius:2px;transition:width 0.4s}
+
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+  .nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;font-size:10px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color 0.15s}
+  .nav-btn.active{color:var(--green)}
+  .nav-icon{font-size:22px;line-height:1}
+
+  /* MAIN */
+  .main{padding:12px}
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* CARDS */
+  .card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:8px;overflow:hidden}
+  .card-header{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+  .card-body{padding:0 14px 14px;border-top:1px solid var(--border)}
+  
+  /* AULA LIST */
+  .aula-item{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:border-color 0.15s}
+  .aula-item.selected{border-color:var(--green);border-width:2px}
+  .aula-item-top{padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .aula-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .dot-ok{background:#1D9E75}
+  .dot-warn{background:#EF9F27}
+  .dot-err{background:#E24B4A}
+  .aula-name{font-size:14px;font-weight:500;flex:1}
+  .aula-pct{font-size:12px;color:var(--muted);font-weight:600}
+  .aula-prog{height:3px;background:var(--bg);margin:0 14px 10px;border-radius:2px}
+  .aula-prog-fill{height:3px;background:var(--green);border-radius:2px;transition:width 0.3s}
+
+  /* DETAIL */
+  .detail-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-top:8px;padding:14px}
+  .detail-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg)}
+  .task-item:last-child{border-bottom:none}
+  .task-cb{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;background:#fff}
+  .task-cb.checked{background:var(--green);border-color:var(--green)}
+  .task-cb.checked::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+  .task-txt{font-size:13px;line-height:1.4;flex:1;padding-top:2px}
+  .task-txt.done{text-decoration:line-through;color:var(--hint)}
+  .task-warn{color:var(--amber);font-weight:500}
+  .note-area{width:100%;margin-top:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;resize:vertical;min-height:70px;color:var(--text);background:#FAFAF8}
+  .btn-save{margin-top:8px;padding:9px 18px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;width:100%}
+  .btn-save:active{background:var(--green-dark)}
+
+  /* GLOBAL TASKS */
+  .section-label{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+  .gtask-item{background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px}
+  .gtask-txt{font-size:13px;flex:1;line-height:1.4}
+  .gtask-txt.done{text-decoration:line-through;color:var(--hint)}
+
+  /* FILTER */
+  .filter-row{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+  .filter-chip{padding:5px 12px;border-radius:99px;border:1px solid var(--border);font-size:12px;background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .filter-chip.active{background:var(--green);border-color:var(--green);color:#fff}
+  .search-box{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);color:var(--text);margin-bottom:10px}
+  .search-box:focus{outline:none;border-color:var(--green)}
+
+  /* BADGE */
+  .badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600}
+  .badge-ok{background:var(--green-light);color:var(--green-dark)}
+  .badge-warn{background:var(--amber-light);color:var(--amber)}
+  .badge-err{background:var(--red-light);color:var(--red)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:#1C1B18;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:200;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:40px 20px;color:var(--hint);font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Kreatibe · 33 Aulas</h1>
+  <div class="header-sub" id="last-saved">Cargando...</div>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-num" id="h-done">0</div><div class="hstat-lbl">Completadas</div></div>
+    <div class="hstat"><div class="hstat-num" id="h-pct">0%</div><div class="hstat-lbl">Progreso</div></div>
+    <div class="hstat"><div class="hstat-num" id="h-pend">33</div><div class="hstat-lbl">Pendientes</div></div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="main-bar" style="width:0%"></div></div>
+</div>
+
+<!-- SCREEN: RESUMEN -->
+<div class="main">
+  <div class="screen active" id="screen-resumen">
+    <div class="section-label">Estado general</div>
+    <div class="filter-row">
+      <div class="filter-chip active" onclick="setFilter('all',this)">Todas (33)</div>
+      <div class="filter-chip" onclick="setFilter('pending',this)">Pendientes</div>
+      <div class="filter-chip" onclick="setFilter('done',this)">Listas</div>
+      <div class="filter-chip" onclick="setFilter('warn',this)">Alertas</div>
+    </div>
+    <input class="search-box" id="search-resumen" placeholder="Buscar aula..." oninput="renderResumen()">
+    <div id="resumen-list"></div>
+    <div id="resumen-detail"></div>
+  </div>
+
+  <!-- SCREEN: AULAS -->
+  <div class="screen" id="screen-aulas">
+    <div class="section-label">Selecciona un aula</div>
+    <input class="search-box" id="search-aulas" placeholder="Buscar aula..." oninput="renderAulas()">
+    <div id="aulas-list"></div>
+    <div id="aulas-detail"></div>
+  </div>
+
+  <!-- SCREEN: GLOBAL -->
+  <div class="screen" id="screen-global">
+    <div class="section-label">Tareas comunes — todas las aulas</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Marca aquí cuando una tarea esté resuelta de forma global. Cada aula también tiene sus propias casillas individuales.</p>
+    <div id="global-list"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchScreen('resumen',this)">
+    <span class="nav-icon">📋</span>Resumen
+  </button>
+  <button class="nav-btn" onclick="switchScreen('aulas',this)">
+    <span class="nav-icon">🏫</span>Aulas
+  </button>
+  <button class="nav-btn" onclick="switchScreen('global',this)">
+    <span class="nav-icon">✅</span>Global
+  </button>
+</nav>
+
+<div class="toast" id="toast">Guardado</div>
+
+<script>
+const AULAS = [
+  "CIFP LAUDIALDE","CIFP Murgia","CIFP ARETXABALETA","CIFP BIDASOA",
+  "CIFP TARTANGA","CIFP FADURA","CIFP PLAIAUNDI","CIFP EAGI",
+  "CIFP ARMERIA ESKOLA","CIFP BLAS DE LEZO","CIFP TOLOSALDEA",
+  "CIFP MIGUEL ALTUNA","CIFP IMH","CIFP MEKA","CIFP BIDEBIETA",
+  "CIFP HOSTELERÍA GALDAKAO","CIFP CONSTRUCCIÓN BIZKAIA","IES MUNGIA BHI",
+  "IES ZARAOBE BHI","CIFP MONTE ALBERTIA","CIFP SANTURTZI","CIFP ANDRA MARI",
+  "CIFP USURBIL","CIFP ZORNOTZA","CIFP DON BOSCO","CIFP EASO POLITEKNIKOA",
+  "CIFP IURRETA","CIFP IZARRAITZ","CIFP ELORRIETA-ERREKAMARI",
+  "TKNIKA","CIFP CIUDAD JARDIN","CIFP HOSTELERÍA LEIOA","CIFP BARAKALDO"
+];
+
+const BASE_TASKS = [
+  {id:"t1", label:"Actualizar versión Extron con cambios electrónica"},
+  {id:"t2", label:"AirMedia: Show AirMedia overlay → Disabled"},
+  {id:"t3", label:"AirMedia: Show Apple screen → Enabled"},
+  {id:"t4", label:"AirMedia: Show Miracast info → Enabled"},
+  {id:"t5", label:"AirMedia: Show connect adaptor → Enabled"},
+  {id:"t6", label:"AirMedia: Show connection info → Disabled"},
+];
+
+const EXTRA_TASKS = {
+  "CIFP USURBIL": [{id:"t7", label:"⚠ Revisar IP electrónica — fallo detectado", warn:true}]
+};
+
+const GLOBAL_TASKS = [
+  {id:"g1", label:"Actualizar versión Extron con cambios electrónica"},
+  {id:"g2", label:"AirMedia: Show AirMedia overlay → Disabled"},
+  {id:"g3", label:"AirMedia: Show Apple screen → Enabled"},
+  {id:"g4", label:"AirMedia: Show Miracast info → Enabled"},
+  {id:"g5", label:"AirMedia: Show connect adaptor → Enabled"},
+  {id:"g6", label:"AirMedia: Show connection info → Disabled"},
+];
+
+let state = {global:{}, aulas:{}, notes:{}};
+let selectedAula = null;
+let currentFilter = "all";
+
+function load() {
+  try {
+    const s = localStorage.getItem("kreatibe-v2");
+    if (s) state = JSON.parse(s);
+  } catch(e){}
+  updateHeader();
+  renderAll();
+  document.getElementById("last-saved").textContent = "Guardado: " + new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+
+function save() {
+  localStorage.setItem("kreatibe-v2", JSON.stringify(state));
+  toast("Guardado ✓");
+  updateHeader();
+  document.getElementById("last-saved").textContent = "Guardado: " + new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+function getAulaTasks(aula) {
+  return [...BASE_TASKS, ...(EXTRA_TASKS[aula]||[])];
+}
+
+function getProgress(aula) {
+  const tasks = getAulaTasks(aula);
+  if (!state.aulas[aula]) return 0;
+  const done = tasks.filter(t => state.aulas[aula][t.id]).length;
+  return Math.round(done / tasks.length * 100);
+}
+
+function getStatus(aula) {
+  const p = getProgress(aula);
+  if (p === 100) return "ok";
+  if (p === 0) return "err";
+  return "warn";
+}
+
+function updateHeader() {
+  const done = AULAS.filter(a => getProgress(a) === 100).length;
+  const pct = Math.round(done / AULAS.length * 100);
+  document.getElementById("h-done").textContent = done;
+  document.getElementById("h-pct").textContent = pct + "%";
+  document.getElementById("h-pend").textContent = AULAS.length - done;
+  document.getElementById("main-bar").style.width = pct + "%";
+}
+
+function renderResumen() {
+  const q = (document.getElementById("search-resumen")||{}).value||"";
+  let list = AULAS.filter(a => a.toLowerCase().includes(q.toLowerCase()));
+  if (currentFilter === "done") list = list.filter(a => getProgress(a)===100);
+  if (currentFilter === "pending") list = list.filter(a => getProgress(a)<100);
+  if (currentFilter === "warn") list = list.filter(a => getStatus(a)==="warn");
+
+  const container = document.getElementById("resumen-list");
+  container.innerHTML = list.length ? list.map(a => aulaCard(a, "resumen")).join("") : '<div class="empty">Sin resultados</div>';
+  renderDetailPanel("resumen-detail", "resumen");
+}
+
+function renderAulas() {
+  const q = (document.getElementById("search-aulas")||{}).value||"";
+  const list = AULAS.filter(a => a.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById("aulas-list").innerHTML = list.map(a => aulaCard(a,"aulas")).join("");
+  renderDetailPanel("aulas-detail", "aulas");
+}
+
+function aulaCard(aula, screen) {
+  const pct = getProgress(aula);
+  const st = getStatus(aula);
+  const dotClass = st==="ok"?"dot-ok":st==="warn"?"dot-warn":"dot-err";
+  const badge = st==="ok"?'<span class="badge badge-ok">Hecho</span>':st==="warn"?'<span class="badge badge-warn">Parcial</span>':'<span class="badge badge-err">Pendiente</span>';
+  const sel = selectedAula===aula?"selected":"";
+  return `<div class="aula-item ${sel}" onclick="selectAula('${aula}','${screen}')">
+    <div class="aula-item-top">
+      <div class="aula-dot ${dotClass}"></div>
+      <div class="aula-name">${aula}</div>
+      <span class="aula-pct">${pct}%</span>
+      ${badge}
+    </div>
+    <div class="aula-prog"><div class="aula-prog-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function selectAula(aula, screen) {
+  selectedAula = aula;
+  if (screen==="resumen") { renderResumen(); }
+  else { renderAulas(); }
+}
+
+function renderDetailPanel(panelId, screen) {
+  const panel = document.getElementById(panelId);
+  if (!selectedAula) { panel.innerHTML=""; return; }
+  const aula = selectedAula;
+  const tasks = getAulaTasks(aula);
+  if (!state.aulas[aula]) state.aulas[aula]={};
+  const note = state.notes[aula]||"";
+  const pct = getProgress(aula);
+
+  panel.innerHTML = `<div class="detail-panel">
+    <div class="detail-title">
+      ${aula}
+      <span style="font-size:12px;font-weight:400;color:var(--muted)">${pct}%</span>
+    </div>
+    ${tasks.map(t => `
+      <div class="task-item" onclick="toggleTask('${aula}','${t.id}','${screen}')">
+        <div class="task-cb ${(state.aulas[aula][t.id])?"checked":""}"></div>
+        <div class="task-txt ${(state.aulas[aula][t.id])?"done":""} ${t.warn?"task-warn":""}">${t.label}</div>
+      </div>
+    `).join("")}
+    <textarea class="note-area" id="note-${aula}-${screen}" placeholder="Notas, incidencias, IP incorrecta...">${note}</textarea>
+    <button class="btn-save" onclick="saveNote('${aula}','${screen}')">Guardar nota</button>
+  </div>`;
+}
+
+function toggleTask(aula, taskId, screen) {
+  if (!state.aulas[aula]) state.aulas[aula]={};
+  state.aulas[aula][taskId] = !state.aulas[aula][taskId];
+  save();
+  if (screen==="resumen") renderResumen();
+  else renderAulas();
+}
+
+function saveNote(aula, screen) {
+  const el = document.getElementById("note-"+aula+"-"+screen);
+  if (el) { state.notes[aula]=el.value; }
+  save();
+}
+
+function renderGlobal() {
+  document.getElementById("global-list").innerHTML = GLOBAL_TASKS.map(t => `
+    <div class="gtask-item" onclick="toggleGlobal('${t.id}')">
+      <div class="task-cb ${state.global[t.id]?"checked":""}"></div>
+      <div class="gtask-txt ${state.global[t.id]?"done":""}">${t.label}</div>
+    </div>
+  `).join("");
+}
+
+function toggleGlobal(id) {
+  state.global[id] = !state.global[id];
+  save();
+  renderGlobal();
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));
+  el.classList.add("active");
+  renderResumen();
+}
+
+function switchScreen(name, btn) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+  btn.classList.add("active");
+  if (name==="global") renderGlobal();
+  if (name==="aulas") renderAulas();
+  if (name==="resumen") renderResumen();
+}
+
+function renderAll() {
+  renderResumen();
+  renderGlobal();
+}
+
+load();
+</script>
+</body>
+</html>
